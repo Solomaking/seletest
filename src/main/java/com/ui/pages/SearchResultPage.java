@@ -1,24 +1,18 @@
 package com.ui.pages;
 
-import com.ui.BasePage;
+import com.ui.util.BasePage;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.How;
-import org.openqa.selenium.support.PageFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.openqa.selenium.support.PageFactory.initElements;
+import static org.testng.AssertJUnit.assertTrue;
 
 public class SearchResultPage extends BasePage {
-
-    //*********Constructor*********
-    public SearchResultPage(WebDriver driver) {
-        super(driver);
-    }
 
     //*********Web Elements By Using Page Factory*********
     @FindBy(how = How.XPATH, using = "/html/body")
@@ -33,49 +27,49 @@ public class SearchResultPage extends BasePage {
     @FindBy(how = How.CSS, using = "[valign='top'] > td > a")
     private List<WebElement> pageNavigationElements; //except current page 1
 
+    //*********Initializing the Page Objects*********
+    public SearchResultPage() {
+        initElements(driver, this);
+    }
+
     //*********Page Methods*********
-    public SomePage ThanIClickNotAddLink(int linkNumber) {
+    public void clickNotAddLink(int linkNumber) {
         searchResultElements.get(linkNumber - 1).click();
-        return new PageFactory().initElements(driver, SomePage.class);
     }
 
-    public SearchResultPage ThanICheckSearchResultsPresent() {
-        assertTrue(getSearchResultElements().
-                size() > 0, "No search result found for searched text");
-        return this;
+    public void checkSearchResultsPresent() {
+        assertTrue("No search result found for searched text",
+                getSearchResultElements().size() > 0);
     }
 
-    public SearchResultPage AndVerifyExpectedDomainPresent(String expectedDomain, int pagesAmountForCheck) {
-        List<String> actualDomains = fetchFirstPagesDomains(pagesAmountForCheck);
-        actualDomains.stream()
-                .filter(domain -> domain.contains(expectedDomain))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("No related domain found for searched text." +
-                        "\nExpected domain was: " + expectedDomain));
-        return this;
+    public void verifyExpectedDomainPresent(String expectedDomain, int pagesAmountForCheck) {
+        boolean flag = false;
+        int navigationElementsAmount = getPageNavigationElements().size();
+        for (int i = 1; i <= navigationElementsAmount; i++) {
+            if (i > pagesAmountForCheck)
+                break;
+            flag = checkCurrentPageDomains(i, expectedDomain);
+            if (flag)
+                break;
+        }
+        assertTrue("No related domain found for searched text." +
+                "\nExpected domain was: " + expectedDomain, flag);
     }
 
     //*********Methods*********
-    private List<String> fetchFirstPagesDomains(int pageResultAmount) {
-        int navigationElementsAmount = getPageNavigationElements().size();
-        List<String> domains = new ArrayList<>();
-        for (int i = 0; i < navigationElementsAmount; i++) {
-            if (i > pageResultAmount)
-                break;
-            for (WebElement domain : collectPageDomains(i)) {
-                domains.add(readText(domain));
-            }
-        }
-        return domains;
-    }
-
     private List<WebElement> getSearchResultElements() {
         return this.searchResultElements;
     }
 
-    private List<WebElement> collectPageDomains(int pageNumber) {
+    private boolean checkCurrentPageDomains(int pageNumber, String expectedDomain) {
         moveToSearchResultPage(pageNumber);
-        return fetchCurrentPageDomains();
+        List<WebElement> domainElements = fetchCurrentPageDomains();
+        List<String> domains = new ArrayList<>();
+        for (WebElement domain : domainElements) {
+            domains.add(domain.getText());
+        }
+        return (domains.stream()
+                .anyMatch(domain -> domain.contains(expectedDomain)));
     }
 
     private List<WebElement> fetchCurrentPageDomains() {
@@ -84,11 +78,11 @@ public class SearchResultPage extends BasePage {
 
     private void moveToSearchResultPage(int pageNumber) {
         if (pageNumber > 1) {
-            click(driver.findElement(By.cssSelector("[aria-label='Page " + pageNumber + "']")));
+            driver.findElement(By.cssSelector("[aria-label='Page " + pageNumber + "']")).click();
         }
     }
 
-    public List<WebElement> getPageNavigationElements() {
+    private List<WebElement> getPageNavigationElements() {
         return this.pageNavigationElements;
     }
 }

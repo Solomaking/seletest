@@ -1,1 +1,7 @@
-/target/
+# production
+target/
+
+# IntelliJ IDEA
+.idea/*
+
+*.iml
