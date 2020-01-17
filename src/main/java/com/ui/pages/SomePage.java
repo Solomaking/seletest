@@ -1,19 +1,19 @@
 package com.ui.pages;
 
-import com.ui.BasePage;
-import org.openqa.selenium.WebDriver;
+import com.ui.util.BasePage;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.openqa.selenium.support.PageFactory.initElements;
+import static org.testng.AssertJUnit.assertTrue;
 
 public class SomePage extends BasePage {
-    //*********Constructor*********
-    public SomePage(WebDriver driver) {
-        super(driver);
+
+    public SomePage() {
+        initElements(driver, this);
     }
 
     //*********Page Methods*********
-    public void VerifyTitleHasText(String textForSearch) {
+    public void titleHasText(String textForSearch) {
         String actualPageTitle = driver.getTitle();
-        assertTrue(actualPageTitle.toLowerCase().contains(textForSearch));
+        assertTrue("Page title does not contain " + textForSearch, actualPageTitle.toLowerCase().contains(textForSearch));
     }
 }
